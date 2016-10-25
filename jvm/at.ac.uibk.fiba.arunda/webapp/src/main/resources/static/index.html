@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Stamping</title>
+</head>
+<body>
+
+<div>
+
+    <h1>Arunda Web Utilities</h1>
+
+    <p>Sie können mit dieser Webapplikation die Arunda-Datenbank zu SQL-Befehlen umwandeln, oder Bilder bzw. PDFs mit
+    dem Arunda-Stempel versehen.</p>
+
+    <div>
+        <h2>Arunda-Datenbank konvertieren</h2>
+        <form action="arunda/tosql" enctype="multipart/form-data" method="post">
+            <label>
+                Bitte die Datenbank-Datei (ArundaProjectVers2.odb) wählen:
+                <input type="file" name="file" />
+            </label>
+            <input type="submit" value="Datenbank konvertieren" />
+        </form>
+    </div>
+    <div>
+        <h2>Bilder mit Stempel versehen</h2>
+        <form action="arunda/stamp" enctype="multipart/form-data" method="post">
+            <label>
+                Bitte eine Bild-Datei bzw. PDF-Datei wählen:
+                <input type="file" name="file" />
+            </label>
+            <input type="submit" value="Wasserzeichen hinzufügen" />
+        </form>
+
+    </div>
+
+</div>
+
+
+
+</body>
+</html>
