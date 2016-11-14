@@ -24,13 +24,24 @@
         </form>
     </div>
     <div>
-        <h2>Bilder mit Stempel versehen</h2>
+        <h2>Bild mit Stempel versehen</h2>
         <form action="arunda/stamp" enctype="multipart/form-data" method="post">
             <label>
                 Bitte eine Bild-Datei bzw. PDF-Datei wählen:
                 <input type="file" name="file" />
             </label>
             <input type="submit" value="Wasserzeichen hinzufügen" />
+        </form>
+
+    </div>
+    <div>
+        <h2>Thumbnail von einem Bild erstellen</h2>
+        <form action="arunda/thumb" enctype="multipart/form-data" method="post">
+            <label>
+                Bitte eine Bild-Datei bzw. PDF-Datei wählen:
+                <input type="file" name="file" />
+            </label>
+            <input type="submit" value="Thumbnail erstellen" />
         </form>
 
     </div>

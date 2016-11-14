@@ -48,4 +48,14 @@ public class WebEndpointTest {
         System.out.println(resp.getContentAsString());
     }
 
+    @Test
+    public void test_thumbing() throws Exception {
+        File f = new File("src/test/resources/01_(7).pdf");
+        byte[] content = FileUtils.readFileToByteArray(f);
+        MockMultipartFile file = new MockMultipartFile(f.getName(), content);
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+        endpoint.thumb(file, resp);
+        Assert.assertEquals(HttpServletResponse.SC_OK, resp.getStatus());
+    }
+
 }

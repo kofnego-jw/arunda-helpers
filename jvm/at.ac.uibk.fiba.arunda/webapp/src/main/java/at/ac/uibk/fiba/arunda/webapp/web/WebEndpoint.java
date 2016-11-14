@@ -1,9 +1,7 @@
 package at.ac.uibk.fiba.arunda.webapp.web;
 
 import at.ac.uibk.fiba.arunda.odb.export.impl.ArundaExport;
-import at.ac.uibk.fiba.arunda.watermark.ImageFileType;
-import at.ac.uibk.fiba.arunda.watermark.PdfWatermarker;
-import at.ac.uibk.fiba.arunda.watermark.WMApplier;
+import at.ac.uibk.fiba.arunda.watermark.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -80,29 +78,46 @@ public class WebEndpoint {
         writeContent(content, contentType, "arunda.sql", resp);
     }
 
+    @RequestMapping(value = "/thumb", method = {RequestMethod.POST, RequestMethod.PUT})
+    public void thumb(@RequestParam("file") MultipartFile file, HttpServletResponse resp) {
+        File orig;
+        try {
+            orig = copyToTmp(file);
+        } catch (Exception e) {
+            write(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage(), resp);
+            return;
+        }
+        String name = orig.getName() + ".thumb.jpg";
+
+        String contentType = "image/jpeg";
+        byte[] content;
+        try {
+            if (orig.getName().toLowerCase().endsWith(".pdf")) {
+                content = IOUtils.toByteArray(PdfImageResize.createThumb(orig));
+            } else {
+                content = IOUtils.toByteArray(ImageResize.createThumb(orig));
+            }
+        } catch (Exception e) {
+            LOGGER.error("Cannot apply watermark.", e);
+            write(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot apply watermark: " + e.getMessage(), resp);
+            return;
+        }
+        writeContent(content, contentType, name, resp);
+    }
+
 
 
     @RequestMapping(value = "/stamp", method = {RequestMethod.POST, RequestMethod.PUT})
     public void stamp(@RequestParam("file") MultipartFile file, HttpServletResponse resp)  {
-        if (!TEMPDIR.exists()) {
-            TEMPDIR.mkdirs();
-        }
-        String name = file.getOriginalFilename();
-        if (name==null || name.isEmpty()) {
-            name = file.getName();
-        }
-        if (name==null || name.isEmpty()) {
-            write(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot read file name.", resp);
-            return;
-        }
-        File orig = new File(TEMPDIR, name);
-        File result = new File(TEMPDIR, "result_" + uuid() + name);
+        File orig;
         try {
-            FileUtils.writeByteArrayToFile(orig, file.getBytes());
+            orig = copyToTmp(file);
         } catch (Exception e) {
-            write(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot write original file: " + e.getMessage(), resp);
+            write(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage(), resp);
             return;
         }
+        File result = createResultFile(orig);
+
         String contentType;
         byte[] content;
         try {
@@ -118,7 +133,34 @@ public class WebEndpoint {
             write(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot apply watermark: " + e.getMessage(), resp);
             return;
         }
-        writeContent(content, contentType, name, resp);
+        writeContent(content, contentType, orig.getName(), resp);
+    }
+
+    private File copyToTmp(MultipartFile file) throws Exception {
+        if (!TEMPDIR.exists()) {
+            TEMPDIR.mkdirs();
+        }
+        String name = file.getOriginalFilename();
+        if (name==null || name.isEmpty()) {
+            name = file.getName();
+        }
+        if (name==null || name.isEmpty()) {
+            throw new Exception("Cannot read file name.");
+        }
+        File orig = new File(TEMPDIR, name);
+        try {
+            FileUtils.writeByteArrayToFile(orig, file.getBytes());
+        } catch (Exception e) {
+            throw new Exception("Cannot write original file: " + e.getMessage(), e);
+        }
+        return orig;
+    }
+
+    private File createResultFile(File orig) {
+        if (!TEMPDIR.exists()) {
+            TEMPDIR.mkdirs();
+        }
+        return new File(TEMPDIR, "result_" + uuid() + "_" + orig.getName());
     }
 
     private void writeContent(byte[] content, String contentType, String filename, HttpServletResponse resp) {
